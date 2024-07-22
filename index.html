@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendriers Vacances Evasion - Espiguettes</title>
+    <!-- Inclure Tailwind CSS depuis un CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Inclure FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+    <!-- Inclure FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <!-- Inclure Axios pour les requêtes API -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Inclure Vue.js depuis un CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <style>
+        body {
+            background-color: #0D1117;
+            color: #C9D1D9;
+        }
+
+        .header {
+            background-color: #161B22;
+            color: #ff6b6b;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .header .container {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .main-content {
+            margin-top: 100px;
+        }
+
+        .highlight .header {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="header p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-[rgb(0,255,255)]"><a href="index.html">VacEva</a></h1>
+                <button @click="toggleMenu" class="lg:hidden focus:outline-none">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <nav :class="{'block': isMenuOpen, 'hidden': !isMenuOpen}"
+                    class="lg:flex lg:items-center lg:space-x-4 flex flex-col lg:flex-row lg:space-y-0 space-y-2 mt-2 lg:mt-0">
+                    <a href="index.html" class="hover:text-gray-400 lg:mt-0 mt-2">Accueil</a>
+                    <a href="#" class="hover:text-gray-400 lg:mt-0 mt-2">A venir</a>
+                    <a href="#" class="hover:text-gray-400 lg:mt-0 mt-2">A venir</a>
+                    <a href="#" class="hover:text-gray-400 lg:mt-0 mt-2">A venir</a>
+                    <a href="#" class="hover:text-gray-400 lg:mt-0 mt-2">A venir</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content flex-grow container mx-auto p-4">
+            <section class="text-center mb-8">
+                <h2 class="text-4xl font-bold mb-4">Calendriers de l'Equipe</h2>
+
+                <!-- Sélecteur de Calendrier -->
+                <div class="mb-4">
+                    <label for="calendar-type" class="block text-lg font-bold mb-2">Sélectionnez le type de calendrier :</label>
+                    <select id="calendar-type" class="p-2 bg-gray-700 text-white rounded" @change="updateCalendar">
+                        <option value="corvées">Calendrier des Corvées</option>
+                        <option value="réveils">Calendrier des Réveils</option>
+                        <option value="congés">Calendrier des Congés</option>
+                        <option value="activités">Calendrier des Activités</option>
+                    </select>
+                </div>
+
+                <!-- Calendrier des Événements -->
+                <div id="calendar" class="mb-12 max-w-4xl mx-auto">
+                    <h3 class="text-xl font-bold mb-8">Calendrier des Événements</h3>
+                    <div id="calendar-container"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                isMenuOpen: false,
+                calendar: null
+            },
+            methods: {
+                toggleMenu() {
+                    this.isMenuOpen = !this.isMenuOpen;
+                },
+                updateCalendar() {
+                    const calendarType = document.getElementById('calendar-type').value;
+                    this.loadCalendarEvents(calendarType);
+                },
+                loadCalendarEvents(type) {
+                    const urls = {
+                        'corvées': 'corvees.json',
+                        'réveils': 'reveils.json',
+                        'activités': 'activites.json',
+                        'congés': 'conges.json'
+                    };
+                    const url = urls[type];
+
+                    axios.get(url)
+                        .then(response => {
+                            const events = response.data.events;
+                            this.calendar.getEventSources().forEach(source => source.remove()); // Supprime les anciennes sources d'événements
+                            this.calendar.addEventSource(events); // Ajoute la nouvelle source d'événements
+                        })
+                        .catch(error => {
+                            console.error('Erreur lors du chargement des événements:', error);
+                        });
+                }
+            },
+            mounted() {
+                // Initialisation du calendrier
+                var calendarEl = document.getElementById('calendar-container');
+                this.calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'timeGridWeek', // Affichage en vue hebdomadaire
+                    events: [], // Les événements seront chargés dynamiquement
+                    height: 'auto',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'timeGridWeek,timeGridDay'
+                    },
+                    eventTimeFormat: {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        meridiem: 'short'
+                    },
+                    eventClick: function(info) {
+                        alert('Event: ' + info.event.title);
+                    },
+                    eventDidMount: function(info) {
+                        const event = info.event;
+                        const element = info.el;
+                        element.style.backgroundColor = event.backgroundColor;
+                        element.style.color = event.textColor;
+                    },
+                    eventDisplay: 'block',
+                    eventBackgroundColor: '#ff6b6b',
+                    eventTextColor: '#0D1117',
+                    eventBorderColor: '#ff6b6b',
+                    eventOverlap: false,
+                    slotMinTime: '06:00:00',
+                    slotMaxTime: '22:00:00',
+                    slotDuration: '00:30:00',
+                    slotLabelInterval: '01:00:00',
+                    slotLabelFormat: {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        omitZeroMinute: false,
+                        meridiem: 'short'
+                    },
+                    allDaySlot: false,
+                    nowIndicator: true,
+                    selectable: true,
+                    select: function(info) {
+                        alert('Selected ' + info.startStr + ' to ' + info.endStr);
+                    }
+                });
+                this.calendar.render();
+
+                // Charger les événements par défaut (corvées)
+                this.loadCalendarEvents('corvées');
+            }
+        });
+    </script>
+</body>
+
+</html>

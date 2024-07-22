@@ -1,0 +1,16 @@
+{
+    "events": [
+        {
+            "title": "Nettoyage",
+            "start": "2024-07-22",
+            "end": "2024-07-22",
+            "daysOfWeek": [1, 2, 3, 4, 5, 6, 7]
+        },
+        {
+            "title": "Vaisselle",
+            "start": "2024-07-23",
+            "end": "2024-07-23",
+            "daysOfWeek": [1, 2, 3, 4, 5, 6, 7]
+        }
+    ]
+}
